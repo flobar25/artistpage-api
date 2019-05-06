@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { persistenceService } from "../../persistence/persitence-service";
 
 export default [
   {
@@ -12,6 +13,8 @@ export default [
     path: "/artists",
     method: "post",
     handler: async (req: Request, res: Response) => {
+      console.log(JSON.stringify(req.body));
+      persistenceService.createArtist(req.body);
       res.send("Artist created!");
     }
   },
