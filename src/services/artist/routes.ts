@@ -6,30 +6,28 @@ export default [
     path: "/artists/:artistId",
     method: "get",
     handler: async (req: Request, res: Response) => {
-      res.send(`Artist ${req.params.artistId} retrieved!`);
+      const result = await persistenceService.readArtist(req.params.artistId);
+      console.log(result);
+      res.status(result ? 200 : 404).send(result);
     }
   },
   {
     path: "/artists",
     method: "post",
     handler: async (req: Request, res: Response) => {
-      console.log(JSON.stringify(req.body));
-      persistenceService.createArtist(req.body);
-      res.send("Artist created!");
+      const result = await persistenceService.createArtist(req.body);
+      res
+        .header("location", `artists/${result}`)
+        .status(201)
+        .send();
     }
   },
   {
-    path: "/artists/:artistId/entries/:entryId",
+    path: "/artists",
     method: "get",
     handler: async (req: Request, res: Response) => {
-      res.send(`Entry ${req.params.entryId} retrieved!`);
-    }
-  },
-  {
-    path: "/artists/:artistId/entries",
-    method: "post",
-    handler: async (req: Request, res: Response) => {
-      res.send("Entry created!");
+      const result = await persistenceService.readArtists();
+      res.status(200).send(result);
     }
   }
 ];

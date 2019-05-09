@@ -1,31 +1,60 @@
-import mongoClient from "mongodb";
+import { MongoClient, ObjectId, ObjectID } from "mongodb";
 
-const mongoUrl = "mongodb://localhost:27017";
-const mongoDb = "artistpagedb";
-const artistCollection = "artists";
+const mongoUrl = "mongodb://localhost:27017/artistpagedb"; //TODO dynamic properties
+const dbName = "artistpagedb"; //TODO dynamic properties
+const artistCollection = "artists"; //TODO dynamic properties
 
 class PersistenceService {
-  initialize() {
-    mongoClient.connect(mongoUrl, (err, db) => {
-      if (err) throw err;
-      var dbo = db.db(mongoDb);
-      dbo.createCollection("artists", function(err, res) {
-        if (err) throw err;
-        console.log("Collection created!");
-        db.close();
-      });
+  createArtist(artist: Artist): Promise<string> {
+    return new Promise((resolve, reject) => {
+      MongoClient.connect(mongoUrl)
+        .then(client => {
+          return client.db(dbName).collection(artistCollection);
+        })
+        .then(collection => {
+          collection.insertOne(artist).then(result => {
+            resolve(`${result.insertedId}`);
+          });
+        })
+        .catch(err => reject(err));
     });
   }
 
-  createArtist(artist: Artist) {
-    mongoClient.connect(mongoUrl, (err, db) => {
-      if (err) throw err;
-      var dbo = db.db(mongoDb);
-      dbo.collection(artistCollection).insertOne(artist, (err, res) => {
-        if (err) throw err;
-        console.log("artist created");
-        db.close();
-      });
+  readArtist(id: string): any {
+    return new Promise((resolve, reject) => {
+      // mongo throws an error if the id is invalid, if the id is invalid it should be the same as an non existing artist from this api perspective
+      if (ObjectID.isValid(id)) {
+        MongoClient.connect(mongoUrl)
+          .then(client => {
+            return client.db(dbName).collection(artistCollection);
+          })
+          .then(collection => {
+            collection.findOne({ _id: new ObjectId(id) }).then(result => {
+              resolve(result);
+            });
+          })
+          .catch(err => reject(err));
+      } else {
+        resolve();
+      }
+    });
+  }
+
+  readArtists() {
+    return new Promise((resolve, reject) => {
+      MongoClient.connect(mongoUrl)
+        .then(client => {
+          return client.db(dbName).collection(artistCollection);
+        })
+        .then(collection => {
+          collection
+            .find({})
+            .toArray()
+            .then(result => {
+              resolve(result);
+            });
+        })
+        .catch(err => reject(err));
     });
   }
 }
